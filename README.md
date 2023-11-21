@@ -166,3 +166,24 @@ Para visualizar o consumo de CPU e Memória de um POD:
 kubectl top pod nomedopod
 ```
 
+# NFS Storage Class
+
+Requisito: \
+Tenha o helm instalado. \
+Tenha um Servidor NFS.
+
+Adicionar o repositório do nfs-subdir-external-provisioner
+```
+$ helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+```
+
+Instalar e setar as configurações. \
+Atenção: Altere os valores conforme necessário.
+```
+$ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    --set nfs.server=192.168.15.8 \
+    --set nfs.path=/home/juliano/nfs \
+    --set storageClass.reclaimPolicy=Retain \
+    --create-namespace -n nfs-provisioner
+```
+
