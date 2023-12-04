@@ -53,6 +53,7 @@ kind delete cluster
 Criar um cluster com 1 Control Plane e 2 Workers.
 
 Necessita criar um arquivo de configuração:
+*Já inclui opções para poder utilizar um ingress controler (Traefik)*
 
 kind-config.yaml
 ```
@@ -60,8 +61,23 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
+  kubeadmConfigPatches:
+    - |
+      kind: InitConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "ingress-ready=true"
+  extraPortMappings:
+    - containerPort: 80
+      hostPort: 80
+      protocol: TCP
+    - containerPort: 443
+      hostPort: 443
+      protocol: TCP
+
 - role: worker
 - role: worker
+
 ```
 
 Executando este cluster:
@@ -70,7 +86,7 @@ kind create cluster --config kind-config.yaml
 ```
 
 
-# LoadBalancer para o Kind
+# LoadBalancer para o Kind (Metallb)
 
 O kind permite que se crie um LoadBalancer para fins de testes e estudos.
 
@@ -181,9 +197,43 @@ Instalar e setar as configurações. \
 Atenção: Altere os valores conforme necessário.
 ```
 $ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=192.168.15.8 \
-    --set nfs.path=/home/juliano/nfs \
+    --set nfs.server=127.0.0.1 \
+    --set nfs.path=/nfs \
     --set storageClass.reclaimPolicy=Retain \
     --create-namespace -n nfs-provisioner
 ```
 
+# Traefik
+
+O Traefik é um Proxy (Edge Router) para ser utilizado como Ingress Controller.
+
+https://doc.traefik.io/traefik/getting-started/install-traefik/
+
+
+Para Instalar é bem simples:
+
+```
+helm repo add traefik https://traefik.github.io/charts
+```
+
+Se quiser visualizar os Values para modificar alguma coisa.
+```
+helm show values traefik/traefik > traefik.yaml
+```
+```
+helm upgrade --install traefik traefik/traefik --create-namespace -n traefik
+```
+
+# Weave CNI 
+
+Este CNI permite trabalhar com regras de rede (Network Policies)
+
+https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
+
+Deve primeiro não adicionar o CNI padrão no KIND, modificando o arquivo de configuração do Cluster.
+
+Depois deve-se executar o comando:
+
+```
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+```
