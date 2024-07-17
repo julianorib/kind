@@ -1,0 +1,38 @@
+- name: Kind Local
+  hosts: localhost
+  tasks:
+    - name: Criar um cluster
+      shell: kind create cluster --config kind-config.yaml
+    
+    - name: Configurar Metallb 
+      shell: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+    
+    - name: sleep
+      shell: sleep 60
+
+    - name: Configurar Metallb 
+      shell: kubectl apply -f metallb.yaml
+
+    - name: Configurar Metrics Server
+      shell: kubectl apply -f metrics-server.yaml
+    
+    - name: Adicionar repositorios grafana
+      shell: helm repo add grafana https://grafana.github.io/helm-charts
+
+    - name: Instalar grafana
+      shell: helm upgrade --install grafana grafana/grafana -n monitoring --create-namespace --set service.type=LoadBalancer
+
+    - name: Obter senha grafana
+      shell: 'kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo'
+      register: Passowrd
+
+    - name: Mostrar senha grafana
+      debug: 
+        msg: "{{ Passowrd.stdout }}"
+
+    - name: Adicionar repositorio prometheus-community
+      shell: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+    - name: Instalar Prometheus
+      shell: helm upgrade --install prometheus prometheus-community/prometheus -n monitoring --create-namespace --set server.service.type=LoadBalancer
+
