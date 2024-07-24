@@ -237,3 +237,7 @@ Depois deve-se executar o comando:
 ```
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 ```
+
+# Dashboards Grafana
+
+16966, 15757, 15758, 15759, 15760
