@@ -224,20 +224,4 @@ helm show values traefik/traefik > traefik.yaml
 helm upgrade --install traefik traefik/traefik --create-namespace -n traefik
 ```
 
-# Weave CNI 
 
-Este CNI permite trabalhar com regras de rede (Network Policies)
-
-https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
-
-Deve primeiro não adicionar o CNI padrão no KIND, modificando o arquivo de configuração do Cluster.
-
-Depois deve-se executar o comando:
-
-```
-kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
-```
-
-# Dashboards Grafana
-
-16966, 15757, 15758, 15759, 15760
