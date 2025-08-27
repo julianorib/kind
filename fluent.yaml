@@ -1,0 +1,39 @@
+image:
+  # Here we use the Docker image which has the plugin installed
+  repository: grafana/fluent-bit-plugin-loki
+  tag: main-e2ed1c0
+
+args:
+  - "-e"
+  - "/fluent-bit/bin/out_grafana_loki.so"
+  - --workdir=/fluent-bit/etc
+  - --config=/fluent-bit/etc/conf/fluent-bit.conf
+
+env:
+  # Note that for security reasons you should fetch the credentials through a Kubernetes Secret https://kubernetes.io/docs/concepts/configuration/secret/ . You may use the envFrom for this.
+  - name: FLUENT_LOKI_URL
+    value: https://loki-gateway/loki/api/v1/push
+
+config:
+  inputs: |
+    [INPUT]
+        Name tail
+        Tag kube.*
+        Path /var/log/containers/*.log
+        # Be aware that local clusters like docker-desktop or kind use the docker log format and not the cri (https://docs.fluentbit.io/manual/installation/kubernetes#container-runtime-interface-cri-parser)
+        multiline.parser docker, cri
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines On
+
+  outputs: |
+    [Output]
+        Name grafana-loki
+        Match kube.*
+        Url ${FLUENT_LOKI_URL}
+        Labels {job="fluent-bit"}
+        LabelKeys level,app # this sets the values for actual Loki streams and the other labels are converted to structured_metadata https://grafana.com/docs/loki/<LOKI_VERSION>/get-started/labels/structured-metadata/
+        BatchWait 1
+        BatchSize 1001024
+        LineFormat json
+        LogLevel info
+        AutoKubernetesLabels true

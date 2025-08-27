@@ -26,10 +26,6 @@
       shell: 'kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo'
       register: Passowrd
 
-    - name: Mostrar senha grafana
-      debug: 
-        msg: "{{ Passowrd.stdout }}"
-
     - name: Adicionar repositorio prometheus-community
       shell: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
@@ -38,3 +34,11 @@
 
     - name: Instalar Loki
       shell: helm upgrade --install loki grafana/loki -n monitoring --values loki.yaml
+
+    - name: Mostrar senha grafana
+      debug: 
+        msg:
+        - "Usuário Grafana: admin / Senha do Grafana: {{ Passowrd.stdout }}"
+        - "Adicione o Datasource do Prometheus apontado para http://prometheus-kube-prometheus-prometheus:9090"
+        - "Adicione o Datasource do Loki apontado para http://loki-gateway/ com Headers: X-Scope-OrgId Value: 1"
+        - "Importe os Dashboards: 16966, 15757, 15758, 15759, 15760"
